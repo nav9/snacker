@@ -3,6 +3,7 @@
 ######################
 *.log
 *.json
+*.zip
 
 # Created by https://www.gitignore.io/api/java,eclipse,netbeans,macos,linux,gradle,git
 
