@@ -16,7 +16,7 @@ public class main {
             s.LoadSnackData();
             s.DisplaySnackForToday();
         } catch (Exception e) {
-            System.out.println("\n\nError. " + e.getCause() + ". If the snacks file is not yet generated, please run this program with '" + generate + "' as a commanline argument");
+            System.out.println("\n\nError. " + e.getCause() + ". If the snacks file is not yet generated, please run this program with '" + generate + "' as a commandline argument");
         }
     }
 }
