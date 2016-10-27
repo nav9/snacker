@@ -29,11 +29,19 @@ public class SnackChooser {
     
     public void GenerateSampleDataAndWrite() {
         ArrayList<Snack> sn = new ArrayList<>();
-        sn.add(new Snack("Dry Fruits", 5, 0));
-        sn.add(new Snack("Ice Cream (from Creamstone)", 4, 0));
-        sn.add(new Snack("Fruit juice", 7, 0));
-        sn.add(new Snack("Boiled corn", 3, 0));
-        sn.add(new Snack("Peanut butter jam sandwich", 8, 0));
+        sn.add(new Snack("Ice Cream (from Naturals)", 49, 0));
+        sn.add(new Snack("Ice Cream (from Creamstone)", 49, 0));
+        sn.add(new Snack("Rasmalai", 40, 0));
+        sn.add(new Snack("Cup o noodles", 38, 0));
+        sn.add(new Snack("Chaat", 43, 0));
+        sn.add(new Snack("Doughnuts", 38, 0));
+        sn.add(new Snack("Lassi", 57, 0));
+        sn.add(new Snack("Fruit juices", 65, 0));
+        sn.add(new Snack("Boiled corn", 43, 0));
+        sn.add(new Snack("Aaloo tikki burger", 39, 0));
+        sn.add(new Snack("Dry fruits", 47, 0));
+        sn.add(new Snack("Peanut butter sandwich", 36, 0));
+        sn.add(new Snack("Breadsticks and sauce", 26, 0));
         WriteData(sn);
     }
 
