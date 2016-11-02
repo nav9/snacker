@@ -23,7 +23,6 @@ public class SnackChooser {
     private final String snackRatingString = "rating";
     private final String recentSnacksString = "recent";
     private final String identifier = "listOfSnackObjects";
-    private Integer maxRecentness;
     private Integer maxTolerableRecentness = 7;//days
     private final ArrayList<Snack> snacks = new ArrayList<>();
     
@@ -88,9 +87,8 @@ public class SnackChooser {
             logger.info("name: {}, rating: {}, recent by {} days", name, rating, recentNum);
         }
         
-        logger.info("\n... done loading");
-        maxRecentness = snacks.size();
-        logger.info("\nRecent days preset = {}", maxRecentness);        
+        logger.info("... done loading");
+        logger.info("maxTolerableRecentness = {}", maxTolerableRecentness);        
     }
     
     public void DisplaySnackForToday() {
@@ -98,7 +96,8 @@ public class SnackChooser {
         
         boolean foundSnack = false;
         Snack chosenSnack = null;
-        Integer howManySnacksToConsiderForRatings = 5;
+        final Integer howManySnacksToConsiderForRatings = 5;
+        final Integer numberOfTriesForGettingValidSnackStack = 1000;
         
         while(foundSnack == false) {
             HashSet<Snack> snackStack = new HashSet<>();
@@ -113,7 +112,7 @@ public class SnackChooser {
                     i++;
                 }
                 //if we have been beating around the bush trying to get a few recent snacks and couldn't find howManySnacksToConsiderForRatings number of them, then reduce the maxTolerableRecentness (you could also program it to adjust the howManySnacksToConsiderForRatings)
-                if (iterations % 1000 == 0) {if (maxTolerableRecentness <= snacks.size()) {maxTolerableRecentness++;} else {logger.error("\n\nSomething is wrong with the recentness values in the JSON file. Please correct it.");}}
+                if (iterations % numberOfTriesForGettingValidSnackStack == 0) {if (maxTolerableRecentness <= snacks.size()) {maxTolerableRecentness++;} else {logger.error("\n\nSomething is wrong with the recentness values in the JSON file. Please correct it.");}}
             }
             
             Snack highestRatedSnack = null;
