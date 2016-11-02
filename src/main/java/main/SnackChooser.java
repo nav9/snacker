@@ -113,7 +113,7 @@ public class SnackChooser {
                     i++;
                 }
                 //if we have been beating around the bush trying to get a few recent snacks and couldn't find howManySnacksToConsiderForRatings number of them, then reduce the maxTolerableRecentness (you could also program it to adjust the howManySnacksToConsiderForRatings)
-                if (iterations % 1000 == 0) {if (maxTolerableRecentness > 0) {maxTolerableRecentness--;} else {logger.error("\n\nSomething is wrong with the recentness values in the JSON file. Please correct it.");}}
+                if (iterations % 1000 == 0) {if (maxTolerableRecentness <= snacks.size()) {maxTolerableRecentness++;} else {logger.error("\n\nSomething is wrong with the recentness values in the JSON file. Please correct it.");}}
             }
             
             Snack highestRatedSnack = null;
@@ -122,13 +122,16 @@ public class SnackChooser {
             for(Snack s: snackStack) {
                 if (s.getRating() > highestRating) {highestRating = s.getRating();highestRatedSnack = s;}
             }
-            logger.info("\n\n\nBest snack for today is: {} with rating {}. Recent by {} days\n\n", highestRatedSnack.getName(), highestRatedSnack.getRating(), highestRatedSnack.getRecent());
-            logger.info("All snacks possible are:");
+            
             i = 0;
+            String snackOptions = "\n\n\nSnacks possible are:\n";
             for(Snack s: snackStack) {
-                logger.info("{}. {} with rating {} and recent by {} days", ++i, s.getName(), s.getRating(), s.getRecent());
+                ++i;
+                snackOptions = snackOptions + "\n" + i + ". " + s.getName() + " with rating " + s.getRating() + " and recent by " + s.getRecent() + " days";
             }
-            logger.info("Please enter your choice:");
+            snackOptions += "\n\nBest snack for today is: "+highestRatedSnack.getName()+" with rating "+highestRatedSnack.getRating()+". Recent by "+highestRatedSnack.getRecent()+" days\n\n";
+            snackOptions += "Please enter your choice:\n";
+            logger.info(snackOptions);
             
             Scanner reader = new Scanner(System.in);  // Reading from System.in
             int userChoice = reader.nextInt(); 
@@ -141,12 +144,11 @@ public class SnackChooser {
                 }      
             }
             
-            if (foundSnack == false) {logger.error("\n\n\nWrong input. Creating new list...\n\n");}
-            
+            if (foundSnack == false) {logger.error("\n\n\nWrong input. Creating new list...\n\n");}            
         }
         
         //should enter this area of code only when snack is found and snack object is assigned to it
-        logger.info("\n\nSnack for today is: {} with rating {}. Recent by {} days\n\n", chosenSnack.getName(), chosenSnack.getRating(), chosenSnack.getRecent());
+        logger.info("\n\n\nSnack chosen for today is: {}\n\n", chosenSnack.getName());
         UpdateData(chosenSnack.getName());
         WriteData(snacks);        
         
