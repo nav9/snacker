@@ -97,7 +97,7 @@ public class SnackChooser {
         boolean foundSnack = false;
         Snack chosenSnack = null;
         final Integer howManySnacksToConsiderForRatings = 4;
-        final Integer numberOfTriesForGettingValidSnackStack = 1000;
+        final Integer numberOfTriesForGettingValidSnackStack = 100;
         
         while(foundSnack == false) {
             HashSet<Snack> snackStack = new HashSet<>();
@@ -113,6 +113,7 @@ public class SnackChooser {
                 if (iterations % numberOfTriesForGettingValidSnackStack == 0) {
                     if (maxTolerableRecentness <= snacks.size()) {
                         maxTolerableRecentness++;
+                        snackStack.clear();
                         logger.info("maxTolerableRecentness (in days) temporarily adjusted to: {}", maxTolerableRecentness);
                     } else {logger.error("\n\nSomething is wrong with the recentness values in the JSON file. Please correct it.");}
                 }
