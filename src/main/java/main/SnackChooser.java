@@ -4,8 +4,10 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Random;
+import java.util.Scanner;
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
@@ -22,26 +24,26 @@ public class SnackChooser {
     private final String recentSnacksString = "recent";
     private final String identifier = "listOfSnackObjects";
     private Integer maxRecentness;
-    private Integer maxTolerableRecentness = 3;//days
+    private Integer maxTolerableRecentness = 7;//days
     private final ArrayList<Snack> snacks = new ArrayList<>();
     
     SnackChooser() {}
     
     public void GenerateSampleDataAndWrite() {
         ArrayList<Snack> sn = new ArrayList<>();
-        sn.add(new Snack("Ice Cream (from Naturals)", 49, 0));
-        sn.add(new Snack("Ice Cream (from Creamstone)", 49, 0));
-        sn.add(new Snack("Rasmalai", 40, 0));
-        sn.add(new Snack("Cup o noodles", 38, 0));
+        sn.add(new Snack("Ice Cream (from Naturals)", 49, 14));
+        sn.add(new Snack("Rasmalai", 40, 10));
         sn.add(new Snack("Chaat", 43, 0));
-        sn.add(new Snack("Doughnuts", 38, 0));
-        sn.add(new Snack("Lassi", 57, 0));
-        sn.add(new Snack("Fruit juices", 65, 0));
-        sn.add(new Snack("Boiled corn", 43, 0));
-        sn.add(new Snack("Aaloo tikki burger", 39, 0));
-        sn.add(new Snack("Dry fruits", 47, 0));
-        sn.add(new Snack("Peanut butter sandwich", 36, 0));
+        sn.add(new Snack("Lassi", 57, 10));
+        sn.add(new Snack("Fruit juices", 65, 10));
+        sn.add(new Snack("Mc Donalds Aaloo tikki burger", 70, 7));
+        sn.add(new Snack("Dry fruits", 47, 8));
+        sn.add(new Snack("Peanut butter sandwich", 36, 11));
         sn.add(new Snack("Breadsticks and sauce", 26, 0));
+        sn.add(new Snack("Vada Pav", 26, 0));
+        sn.add(new Snack("Dhokla", 26, 0));
+        sn.add(new Snack("Cupcakes", 32, 0));
+        sn.add(new Snack("Momo", 34, 0));
         WriteData(sn);
     }
 
@@ -95,16 +97,59 @@ public class SnackChooser {
         AdjustMaxTolerableRecentnessIfDataIsTooLess();
         
         boolean foundSnack = false;
+        Snack chosenSnack = null;
+        Integer howManySnacksToConsiderForRatings = 5;
+        
         while(foundSnack == false) {
-            Snack s = snacks.get(GetRandomNumberInThisRange(0, snacks.size()-1));
+            HashSet<Snack> snackStack = new HashSet<>();
             
-            if (s.getRecent() < maxTolerableRecentness) {
-                foundSnack = true;
-                logger.info("\n\nSnack for today is: {} with rating {}. Recent by {} days\n\n", s.getName(), s.getRating(), s.getRecent());
-                UpdateData(s.getName());
-                WriteData(snacks);
+            int i = 0;
+            Integer iterations = 0;
+            while(i < howManySnacksToConsiderForRatings) {//get a few randomly chosen snacks
+                iterations++;
+                Snack s = snacks.get(GetRandomNumberInThisRange(0, snacks.size()-1));
+                if (s.getRecent() < maxTolerableRecentness) {
+                    snackStack.add(s);
+                    i++;
+                }
+                //if we have been beating around the bush trying to get a few recent snacks and couldn't find howManySnacksToConsiderForRatings number of them, then reduce the maxTolerableRecentness (you could also program it to adjust the howManySnacksToConsiderForRatings)
+                if (iterations % 1000 == 0) {if (maxTolerableRecentness > 0) {maxTolerableRecentness--;} else {logger.error("\n\nSomething is wrong with the recentness values in the JSON file. Please correct it.");}}
             }
+            
+            Snack highestRatedSnack = null;
+            Integer highestRating = 0;
+            //Find the one with the highest rating
+            for(Snack s: snackStack) {
+                if (s.getRating() > highestRating) {highestRating = s.getRating();highestRatedSnack = s;}
+            }
+            logger.info("\n\n\nBest snack for today is: {} with rating {}. Recent by {} days\n\n", highestRatedSnack.getName(), highestRatedSnack.getRating(), highestRatedSnack.getRecent());
+            logger.info("All snacks possible are:");
+            i = 0;
+            for(Snack s: snackStack) {
+                logger.info("{}. {} with rating {} and recent by {} days", ++i, s.getName(), s.getRating(), s.getRecent());
+            }
+            logger.info("Please enter your choice:");
+            
+            Scanner reader = new Scanner(System.in);  // Reading from System.in
+            int userChoice = reader.nextInt(); 
+            
+            i = 0;
+            for(Snack s: snackStack) {
+                if (++i == userChoice) {
+                    chosenSnack = s;
+                    foundSnack = true;      
+                }      
+            }
+            
+            if (foundSnack == false) {logger.error("\n\n\nWrong input. Creating new list...\n\n");}
+            
         }
+        
+        //should enter this area of code only when snack is found and snack object is assigned to it
+        logger.info("\n\nSnack for today is: {} with rating {}. Recent by {} days\n\n", chosenSnack.getName(), chosenSnack.getRating(), chosenSnack.getRecent());
+        UpdateData(chosenSnack.getName());
+        WriteData(snacks);        
+        
     }
     
     private void AdjustMaxTolerableRecentnessIfDataIsTooLess() {
