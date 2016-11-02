@@ -96,23 +96,26 @@ public class SnackChooser {
         
         boolean foundSnack = false;
         Snack chosenSnack = null;
-        final Integer howManySnacksToConsiderForRatings = 5;
+        final Integer howManySnacksToConsiderForRatings = 4;
         final Integer numberOfTriesForGettingValidSnackStack = 1000;
         
         while(foundSnack == false) {
             HashSet<Snack> snackStack = new HashSet<>();
-            
-            int i = 0;
+                        
             Integer iterations = 0;
-            while(i < howManySnacksToConsiderForRatings) {//get a few randomly chosen snacks
+            while(snackStack.size() < howManySnacksToConsiderForRatings) {//get a few randomly chosen snacks
                 iterations++;
-                Snack s = snacks.get(GetRandomNumberInThisRange(0, snacks.size()-1));
+                Snack s = snacks.get(GetRandomNumberInThisRange(0, snacks.size() - 1));
                 if (s.getRecent() < maxTolerableRecentness) {
                     snackStack.add(s);
-                    i++;
                 }
                 //if we have been beating around the bush trying to get a few recent snacks and couldn't find howManySnacksToConsiderForRatings number of them, then reduce the maxTolerableRecentness (you could also program it to adjust the howManySnacksToConsiderForRatings)
-                if (iterations % numberOfTriesForGettingValidSnackStack == 0) {if (maxTolerableRecentness <= snacks.size()) {maxTolerableRecentness++;} else {logger.error("\n\nSomething is wrong with the recentness values in the JSON file. Please correct it.");}}
+                if (iterations % numberOfTriesForGettingValidSnackStack == 0) {
+                    if (maxTolerableRecentness <= snacks.size()) {
+                        maxTolerableRecentness++;
+                        logger.info("maxTolerableRecentness (in days) temporarily adjusted to: {}", maxTolerableRecentness);
+                    } else {logger.error("\n\nSomething is wrong with the recentness values in the JSON file. Please correct it.");}
+                }
             }
             
             Snack highestRatedSnack = null;
@@ -122,12 +125,13 @@ public class SnackChooser {
                 if (s.getRating() > highestRating) {highestRating = s.getRating();highestRatedSnack = s;}
             }
             
-            i = 0;
+            int i = 0;
             String snackOptions = "\n\n\nSnacks possible are:\n";
             for(Snack s: snackStack) {
                 ++i;
                 snackOptions = snackOptions + "\n" + i + ". " + s.getName() + " with rating " + s.getRating() + " and recent by " + s.getRecent() + " days";
             }
+            snackOptions = snackOptions + "\n" + (snackStack.size()+1) + ". Show me another slightly different set of snacks";
             snackOptions += "\n\nBest snack for today is: "+highestRatedSnack.getName()+" with rating "+highestRatedSnack.getRating()+". Recent by "+highestRatedSnack.getRecent()+" days\n\n";
             snackOptions += "Please enter your choice:\n";
             logger.info(snackOptions);
@@ -143,7 +147,7 @@ public class SnackChooser {
                 }      
             }
             
-            if (foundSnack == false) {logger.error("\n\n\nWrong input. Creating new list...\n\n");}            
+            if (foundSnack == false) {if (userChoice == snackStack.size()+1) {logger.info("\n\n\nOk. Creating new list...\n\n");} else {logger.error("\n\n\nWrong input. Creating new list...\n\n");}}            
         }
         
         //should enter this area of code only when snack is found and snack object is assigned to it
