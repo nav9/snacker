@@ -11,6 +11,7 @@ The master branch is used for active collaborative development.
 The release branch is used only when a version of the project is ready for release. The release branch is ideally operated only by the repository owner.  
   
 #Running this project  
+* Because this project uses Gradle, you may find it tough to configure and run it. Please ask Navin for help. Otherwise, you can also simply create a new java project, use the java files of this project and use the dependency jar files manually. Gradle just helps in downloading those dependency libraries automatically and building.
 * To run this project, you need Gradle.   
 * Install Gradle and navigate to this project's folder in the commandline and simply type "gradle". The project will build and a jar will be created in ./build/libs.  
 * Go to the libs folder and run the project with "java -jar snacker.jar gen" the first time you run it.  
@@ -22,7 +23,6 @@ The release branch is used only when a version of the project is ready for relea
   
 #TODO list  
 * Using a CSV file instead of JSON, since the End User isn't able to figure out how to edit JSON. With CSV, the User will be able to open the file in Excel. Recommended approach is to have the column names in the first row of the CSV and every snack in a new row as snackName, rating, daysElapsed.  
-* Selecting the best snack based on rating and also the days elapsed
 * The SnackChooser class has a constant named maxTolerableRecentness set to 3 days. Rather than have the value in code, it would be better to have the value in the JSON/CSV file so that the end user would be able to edit it.  
 * Needs permission: Would be nice if the User did not have to manually execute this program. Perhaps if the program ran on a server and the results could be visible via a browser, it would be simpler. Also open to the possibility of allowing Users to click on which snack they have a craving for on a particular day so that it would override the algorithm's choice for that day.
   
