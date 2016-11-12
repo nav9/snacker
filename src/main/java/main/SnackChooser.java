@@ -40,9 +40,9 @@ public class SnackChooser {
         sn.add(new Snack("Peanut butter sandwich", 36, 11));
         sn.add(new Snack("Breadsticks and sauce", 26, 0));
         sn.add(new Snack("Vada Pav", 26, 0));
-        sn.add(new Snack("Dhokla", 26, 0));
+        sn.add(new Snack("Dhokla and jalebi", 26, 0));
         sn.add(new Snack("Cupcakes", 32, 0));
-        sn.add(new Snack("Momo", 34, 0));
+        sn.add(new Snack("Dilpasand", 34, 0));
         WriteData(sn);
     }
 
@@ -95,45 +95,53 @@ public class SnackChooser {
         AdjustMaxTolerableRecentnessIfDataIsTooLess();
         
         boolean foundSnack = false;
+        boolean exitWithoutMakingChoice = false;
         Snack chosenSnack = null;
-        final Integer howManySnacksToConsiderForRatings = 4;
+        Integer howManySnacksToConsiderForRatings = 4;
         final Integer numberOfTriesForGettingValidSnackStack = 100;
         
         while(foundSnack == false) {
-            HashSet<Snack> snackStack = new HashSet<>();
+            HashSet<Snack> chosenSnacks = new HashSet<>();
                         
             Integer iterations = 0;
-            while(snackStack.size() < howManySnacksToConsiderForRatings) {//get a few randomly chosen snacks
+            while(chosenSnacks.size() < howManySnacksToConsiderForRatings) {//get a few randomly chosen snacks
                 iterations++;
                 Snack s = snacks.get(GetRandomNumberInThisRange(0, snacks.size() - 1));
                 if (s.getRecent() < maxTolerableRecentness) {
-                    snackStack.add(s);
+                    chosenSnacks.add(s);
                 }
                 //if we have been beating around the bush trying to get a few recent snacks and couldn't find howManySnacksToConsiderForRatings number of them, then reduce the maxTolerableRecentness (you could also program it to adjust the howManySnacksToConsiderForRatings)
                 if (iterations % numberOfTriesForGettingValidSnackStack == 0) {
                     if (maxTolerableRecentness <= snacks.size()) {
                         maxTolerableRecentness++;
-                        snackStack.clear();
+                        chosenSnacks.clear();
                         logger.info("maxTolerableRecentness (in days) temporarily adjusted to: {}", maxTolerableRecentness);
                     } else {logger.error("\n\nSomething is wrong with the recentness values in the JSON file. Please correct it.");}
                 }
             }
             
-            Snack highestRatedSnack = null;
+            Snack bestSnack = null;
             Integer highestRating = 0;
-            //Find the one with the highest rating
-            for(Snack s: snackStack) {
-                if (s.getRating() > highestRating) {highestRating = s.getRating();highestRatedSnack = s;}
+            Integer leastRecentness = snacks.size();
+            //Find the one with the highest rating and least recentness
+            for(Snack s: chosenSnacks) {
+                if ((highestRating == 0 && leastRecentness == snacks.size()) || //if it's the first iteration, just assign it as the best snack
+                    (s.getRating() > highestRating && s.getRecent() < leastRecentness)) {//for the remaining iterations, assess
+                    highestRating = s.getRating();
+                    leastRecentness = s.getRecent();
+                    bestSnack = s;
+                }
             }
             
             int i = 0;
             String snackOptions = "\n\n\nSnacks possible are:\n";
-            for(Snack s: snackStack) {
+            for(Snack s: chosenSnacks) {
                 ++i;
                 snackOptions = snackOptions + "\n" + i + ". " + s.getName() + " with rating " + s.getRating() + " and recent by " + s.getRecent() + " days";
             }
-            snackOptions = snackOptions + "\n" + (snackStack.size()+1) + ". Show me another slightly different set of snacks";
-            snackOptions += "\n\nBest snack for today is: "+highestRatedSnack.getName()+" with rating "+highestRatedSnack.getRating()+". Recent by "+highestRatedSnack.getRecent()+" days\n\n";
+            snackOptions = snackOptions + "\n\n" + (chosenSnacks.size()+1) + ". Show me more snacks";
+            snackOptions = snackOptions + "\n" + (chosenSnacks.size()+2) + ". Exit";
+            snackOptions += "\n\nBest snack for today is: "+bestSnack.getName()+" with rating "+bestSnack.getRating()+". Recent by "+bestSnack.getRecent()+" days\n\n";
             snackOptions += "Please enter your choice:\n";
             logger.info(snackOptions);
             
@@ -141,21 +149,30 @@ public class SnackChooser {
             int userChoice = reader.nextInt(); 
             
             i = 0;
-            for(Snack s: snackStack) {
+            for(Snack s : chosenSnacks) {
                 if (++i == userChoice) {
                     chosenSnack = s;
-                    foundSnack = true;      
-                }      
+                    foundSnack = true;
+                }
             }
             
-            if (foundSnack == false) {if (userChoice == snackStack.size()+1) {logger.info("\n\n\nOk. Creating new list...\n\n");} else {logger.error("\n\n\nWrong input. Creating new list...\n\n");}}            
+            if (foundSnack == false) {
+                if (userChoice == chosenSnacks.size()+1) {
+                    if (howManySnacksToConsiderForRatings < snacks.size()-1) {howManySnacksToConsiderForRatings++;}//if the user wants to see a different set of snacks, show one more snack in the list
+                    logger.info("\n\n\nOk. Creating new list...\n\n");
+                } else if (userChoice == chosenSnacks.size()+2) {
+                    exitWithoutMakingChoice = true;
+                    logger.info("Bye! :-)");
+                    break;//exit the while loop and end the program
+                } else {logger.error("\n\n\nWrong input. Creating new list...\n\n");}}            
         }
         
-        //should enter this area of code only when snack is found and snack object is assigned to it
-        logger.info("\n\n\nSnack chosen for today is: {}\n\n", chosenSnack.getName());
-        UpdateData(chosenSnack.getName());
-        WriteData(snacks);        
-        
+        if (exitWithoutMakingChoice == false) {
+            //should enter this area of code only when snack is found and snack object is assigned to it
+            logger.info("\n\n\nSnack chosen for today is: {}\n\n", chosenSnack.getName());
+            UpdateData(chosenSnack.getName());
+            WriteData(snacks);        
+        }
     }
     
     private void AdjustMaxTolerableRecentnessIfDataIsTooLess() {

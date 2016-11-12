@@ -22,9 +22,8 @@ The release branch is used only when a version of the project is ready for relea
   
 #TODO list  
 * Using a CSV file instead of JSON, since the End User isn't able to figure out how to edit JSON. With CSV, the User will be able to open the file in Excel. Recommended approach is to have the column names in the first row of the CSV and every snack in a new row as snackName, rating, daysElapsed.  
-* The algorithm currently does not account for the snack ratings. Including it would help.  
+* Selecting the best snack based on rating and also the days elapsed
 * The SnackChooser class has a constant named maxTolerableRecentness set to 3 days. Rather than have the value in code, it would be better to have the value in the JSON/CSV file so that the end user would be able to edit it.  
-* Could explore the possibility of displaying an entire week's snack list for the end user.  
 * Needs permission: Would be nice if the User did not have to manually execute this program. Perhaps if the program ran on a server and the results could be visible via a browser, it would be simpler. Also open to the possibility of allowing Users to click on which snack they have a craving for on a particular day so that it would override the algorithm's choice for that day.
   
 #Known issues/bugs  
