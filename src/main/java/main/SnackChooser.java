@@ -1,108 +1,89 @@
 package main;
 
+import main.csv.Snack;
+import com.opencsv.CSVReader;
+import java.io.File;
 import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Random;
 import java.util.Scanner;
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
+import main.csv.WriterCSV;
 import org.slf4j.LoggerFactory;
 
 public class SnackChooser {
 
-    private final org.slf4j.Logger logger = LoggerFactory.getLogger(SnackChooser.class);
+    private final org.slf4j.Logger log = LoggerFactory.getLogger(SnackChooser.class);
 
-    private final String filename = "snack.json";
-    private final String snackNameString = "name";
-    private final String snackRatingString = "rating";
-    private final String recentSnacksString = "recent";
-    private final String identifier = "listOfSnackObjects";
+    private final String filename = "snack.csv";
     private Integer maxTolerableRecentness = 7;//days
     private final ArrayList<Snack> snacks = new ArrayList<>();
-    
-    SnackChooser() {}
-    
-    public void GenerateSampleDataAndWrite() {
-        ArrayList<Snack> sn = new ArrayList<>();
-        sn.add(new Snack("Ice Cream (from Naturals)", 49, 14));
-        sn.add(new Snack("Rasmalai", 40, 10));
-        sn.add(new Snack("Chaat", 43, 0));
-        sn.add(new Snack("Lassi", 57, 10));
-        sn.add(new Snack("Fruit juices", 65, 10));
-        sn.add(new Snack("Mc Donalds Aaloo tikki burger", 70, 7));
-        sn.add(new Snack("Dry fruits", 47, 8));
-        sn.add(new Snack("Peanut butter sandwich", 36, 11));
-        sn.add(new Snack("Breadsticks and sauce", 26, 0));
-        sn.add(new Snack("Vada Pav", 26, 0));
-        sn.add(new Snack("Dhokla and jalebi", 26, 0));
-        sn.add(new Snack("Cupcakes", 32, 0));
-        sn.add(new Snack("Dilpasand", 34, 0));
-        WriteData(sn);
+    private final WriterCSV writer = new WriterCSV();
+
+    public SnackChooser() {
     }
 
-    public void WriteData(ArrayList<Snack> snackList) {            
-        try {
-            FileWriter file = new FileWriter(filename);
-            JSONObject objectToWrite = new JSONObject();
-            JSONArray list = new JSONArray();
+    public void GenerateSampleDataAndWrite() {
+        log.info("GenerateSampleDataAndWrite");
+        
+        snacks.clear();
+        snacks.add(new Snack("Ice Cream (from Naturals)", 49, 14));
+        snacks.add(new Snack("Rasmalai", 40, 10));
+        snacks.add(new Snack("Chaat", 43, 0));
+        snacks.add(new Snack("Lassi", 57, 10));
+        snacks.add(new Snack("Fruit juices", 65, 10));
+        snacks.add(new Snack("Mc Donalds Aaloo tikki burger", 70, 7));
+        snacks.add(new Snack("Dry fruits", 47, 8));
+        snacks.add(new Snack("Peanut butter sandwich", 36, 11));
+        snacks.add(new Snack("Breadsticks and sauce", 26, 0));
+        snacks.add(new Snack("Vada Pav", 26, 0));
+        snacks.add(new Snack("Dhokla and jalebi", 26, 0));
+        snacks.add(new Snack("Cupcakes", 32, 0));
+        snacks.add(new Snack("Dilpasand", 34, 0));      
+        
+        WriteData(snacks);
+    }
+    
+    public void WriteData(ArrayList<Snack> snackList) {
+        DeleteTheOldFile();
+        writer.WriteToCSV(filename, snacks);
+    }
 
-            for(Snack sn: snackList) {
-                JSONObject obj = new JSONObject();
-                obj.put(snackNameString, sn.getName());
-                obj.put(snackRatingString, sn.getRating());
-                obj.put(recentSnacksString, sn.getRecent());
-                list.add(obj);
+    public void LoadSnackData() {
+        try {
+            CSVReader reader = new CSVReader(new FileReader(filename));
+            String[] nextLine;
+            log.info("\n\nLoading data ...");
+            snacks.clear();
+            boolean fileHeaderLine = true;
+            while((nextLine = reader.readNext()) != null) {
+                if (fileHeaderLine) {fileHeaderLine=false;continue;}//ignore the first line of the CSV
+                String name = nextLine[0];
+                String rating = nextLine[1];
+                String recent = nextLine[2];
+
+                snacks.add(new Snack(name, Integer.parseInt(rating), Integer.parseInt(recent)));
+                log.info("name: {}, rating: {}, recent by {} days", name, rating, recent);
             }
 
-            objectToWrite.put(identifier, list);
+            log.info("... done loading");        
+            log.info("maxTolerableRecentness = {}", maxTolerableRecentness);
+        } catch (IOException | NumberFormatException ex) {log.error("{}", ex.getMessage(), ex);}
+    }
 
-            file.write(objectToWrite.toJSONString());
-            file.flush();
-            file.close();
-        } catch (IOException ex) {logger.error("{}", ex.getCause());}
-    }
-    
-    public void LoadSnackData() {
-        JSONParser parser = new JSONParser();
-        Object obj = null;
-        try {obj = parser.parse(new FileReader(filename));} catch (IOException | ParseException ex) {logger.info("{}", ex.getCause());}
-        JSONObject jsonObject = (JSONObject) obj;
-        JSONArray msg = (JSONArray) jsonObject.get(identifier);
-        Iterator<JSONObject> iterator = msg.iterator();
-        logger.info("\n\nLoading data ...");
-        snacks.clear();
-        
-        while (iterator.hasNext()) {
-            JSONObject ob = iterator.next();
-            String name =(String) ob.get(snackNameString);
-            Long rating =(Long) ob.get(snackRatingString);
-            Long recentNum = (Long) ob.get(recentSnacksString);
-            snacks.add(new Snack(name, rating.intValue(), recentNum.intValue()));
-            logger.info("name: {}, rating: {}, recent by {} days", name, rating, recentNum);
-        }
-        
-        logger.info("... done loading");
-        logger.info("maxTolerableRecentness = {}", maxTolerableRecentness);        
-    }
-    
     public void DisplaySnackForToday() {
         AdjustMaxTolerableRecentnessIfDataIsTooLess();
-        
+
         boolean foundSnack = false;
         boolean exitWithoutMakingChoice = false;
         Snack chosenSnack = null;
-        Integer howManySnacksToConsiderForRatings = 4;
-        final Integer numberOfTriesForGettingValidSnackStack = 100;
-        
+        int howManySnacksToConsiderForRatings = 4;
+        final int numberOfTriesForGettingValidSnackStack = 10;
+
         while(foundSnack == false) {
             HashSet<Snack> chosenSnacks = new HashSet<>();
-                        
+
             Integer iterations = 0;
             while(chosenSnacks.size() < howManySnacksToConsiderForRatings) {//get a few randomly chosen snacks
                 iterations++;
@@ -112,21 +93,26 @@ public class SnackChooser {
                 }
                 //if we have been beating around the bush trying to get a few recent snacks and couldn't find howManySnacksToConsiderForRatings number of them, then reduce the maxTolerableRecentness (you could also program it to adjust the howManySnacksToConsiderForRatings)
                 if (iterations % numberOfTriesForGettingValidSnackStack == 0) {
+                    log.info("iter {}, numofTries={}, maxTolerableRecentness={}, snacks.size={}", iterations, numberOfTriesForGettingValidSnackStack, maxTolerableRecentness, snacks.size());
                     if (maxTolerableRecentness <= snacks.size()) {
                         maxTolerableRecentness++;
                         chosenSnacks.clear();
-                        logger.info("maxTolerableRecentness (in days) temporarily adjusted to: {}", maxTolerableRecentness);
-                    } else {logger.error("\n\nSomething is wrong with the recentness values in the JSON file. Please correct it.");}
+                        log.info("maxTolerableRecentness (in days) temporarily adjusted to: {}", maxTolerableRecentness);
+                    }
+                    else {
+                        log.error("\n\nSomething is wrong with the recentness values in the JSON file. Please correct it.");
+                    }
                 }
             }
-            
+
             Snack bestSnack = null;
             Integer highestRating = 0;
             Integer leastRecentness = snacks.size();
             //Find the one with the highest rating and least recentness
-            for(Snack s: chosenSnacks) {
-                if ((highestRating == 0 && leastRecentness == snacks.size()) || //if it's the first iteration, just assign it as the best snack
-                    (s.getRating() > highestRating && s.getRecent() < leastRecentness)) {//for the remaining iterations, assess
+            for(Snack s : chosenSnacks) {
+                if ((highestRating == 0 && leastRecentness == snacks.size())
+                    || //if it's the first iteration, just assign it as the best snack
+                        (s.getRating() > highestRating && s.getRecent() < leastRecentness)) {//for the remaining iterations, assess
                     highestRating = s.getRating();
                     leastRecentness = s.getRecent();
                     bestSnack = s;
@@ -135,19 +121,19 @@ public class SnackChooser {
             
             int i = 0;
             String snackOptions = "\n\n\nSnacks possible are:\n";
-            for(Snack s: chosenSnacks) {
+            for(Snack s : chosenSnacks) {
                 ++i;
                 snackOptions = snackOptions + "\n" + i + ". " + s.getName() + " with rating " + s.getRating() + " and recent by " + s.getRecent() + " days";
             }
-            snackOptions = snackOptions + "\n\n" + (chosenSnacks.size()+1) + ". Show me more snacks";
-            snackOptions = snackOptions + "\n" + (chosenSnacks.size()+2) + ". Exit";
-            snackOptions += "\n\nBest snack for today is: "+bestSnack.getName()+" with rating "+bestSnack.getRating()+". Recent by "+bestSnack.getRecent()+" days\n\n";
+            snackOptions = snackOptions + "\n\n" + (chosenSnacks.size() + 1) + ". Show me more snacks";
+            snackOptions = snackOptions + "\n" + (chosenSnacks.size() + 2) + ". Exit";
+            snackOptions += "\n\nBest snack for today is: " + bestSnack.getName() + " with rating " + bestSnack.getRating() + ". Recent by " + bestSnack.getRecent() + " days\n\n";
             snackOptions += "Please enter your choice:\n";
-            logger.info(snackOptions);
-            
+            log.info(snackOptions);
+
             Scanner reader = new Scanner(System.in);  // Reading from System.in
-            int userChoice = reader.nextInt(); 
-            
+            int userChoice = reader.nextInt();
+
             i = 0;
             for(Snack s : chosenSnacks) {
                 if (++i == userChoice) {
@@ -155,44 +141,64 @@ public class SnackChooser {
                     foundSnack = true;
                 }
             }
-            
+
             if (foundSnack == false) {
-                if (userChoice == chosenSnacks.size()+1) {
-                    if (howManySnacksToConsiderForRatings < snacks.size()-1) {howManySnacksToConsiderForRatings++;}//if the user wants to see a different set of snacks, show one more snack in the list
-                    logger.info("\n\n\nOk. Creating new list...\n\n");
-                } else if (userChoice == chosenSnacks.size()+2) {
+                if (userChoice == chosenSnacks.size() + 1) {
+                    if (howManySnacksToConsiderForRatings < snacks.size() - 1) {
+                        howManySnacksToConsiderForRatings++;
+                    }//if the user wants to see a different set of snacks, show one more snack in the list
+                    log.info("\n\n\nOk. Creating new list...\n\n");
+                }
+                else if (userChoice == chosenSnacks.size() + 2) {
                     exitWithoutMakingChoice = true;
-                    logger.info("Bye! :-)");
+                    log.info("Bye! :-)");
                     break;//exit the while loop and end the program
-                } else {logger.error("\n\n\nWrong input. Creating new list...\n\n");}}            
+                }
+                else {
+                    log.error("\n\n\nWrong input. Creating new list...\n\n");
+                }
+            }
         }
-        
+
         if (exitWithoutMakingChoice == false) {
             //should enter this area of code only when snack is found and snack object is assigned to it
-            logger.info("\n\n\nSnack chosen for today is: {}\n\n", chosenSnack.getName());
+            log.info("\n\n\nSnack chosen for today is: {}\n\n", chosenSnack.getName());
             UpdateData(chosenSnack.getName());
-            WriteData(snacks);        
+            WriteData(snacks);
         }
     }
-    
+
     private void AdjustMaxTolerableRecentnessIfDataIsTooLess() {
-        if (maxTolerableRecentness > snacks.size()) {maxTolerableRecentness = snacks.size();}
+        if (maxTolerableRecentness > snacks.size()) {
+            maxTolerableRecentness = snacks.size();
+        }
     }
-    
+
     private void UpdateData(final String snackNameChosenForToday) {
-        for(Snack s: snacks) {
-            if (s.getName().equals(snackNameChosenForToday)) {s.setRecent(snacks.size());}
+        for(Snack s : snacks) {
+            if (s.getName().equals(snackNameChosenForToday)) {
+                s.setRecent(snacks.size());
+            }
             else {
                 Integer recentVal = s.getRecent();
-                if (recentVal > 0) {s.setRecent(recentVal - 1);}
+                if (recentVal > 0) {
+                    s.setRecent(recentVal - 1);
+                }
             }
         }
     }
-    
+
     private Integer GetRandomNumberInThisRange(Integer minimum, Integer maximum) {
         Random rn = new Random();
         int range = maximum - minimum + 1;
-        return  rn.nextInt(range) + minimum;
+        return rn.nextInt(range) + minimum;
     }
-        
+    
+    private void DeleteTheOldFile() {
+        try {
+            File file = new File(filename);
+            if (file.delete()) {log.info("{} is deleted!", file.getName());} else {log.info("Delete operation is failed.");}
+        } catch (Exception e) {log.error("{}", e.getMessage(), e);}
+    }
+
 }

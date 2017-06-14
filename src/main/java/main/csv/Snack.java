@@ -1,11 +1,14 @@
-package main;
+package main.csv;
 
-public class Snack {
+import java.io.Serializable;
+
+public class Snack implements Serializable {
+    private static final long serialVersionUID = 1L;
     private String name;
     private Integer rating;
     private Integer recent;
     
-    public Snack(String name, Integer rating, Integer recent) {
+    public Snack(final String name, final Integer rating, final Integer recent) {
         this.name = name;
         this.rating = rating;
         this.recent = recent;
