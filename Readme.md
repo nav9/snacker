@@ -1,4 +1,4 @@
-![Alt text](images/snacker.jpg?raw=true "Snacker")
+![Alt text](images/snacker.jpeg?raw=true "Snacker")
 
 Nice to see you are one of the few people in the world who read Readme files :-)  
 This is a markdown file: https://en.wikipedia.org/wiki/Markdown  
